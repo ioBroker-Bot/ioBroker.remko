@@ -10,16 +10,27 @@ const FAST_DEFAULT = [
     5132, 5174, 5190, 5205, 5231, 5233, 5320, 5321, 5353, 5359, 5572, 5581, 5625, 5626, 5693, 5911,
 ];
 // Refrigerant circuit values shown in the "heat pump" scheme of the web UI (service menu only).
-// They are always read (fast cycle) and placed in their own folder "kaeltekreis".
+// They are always read (fast cycle) and placed in their own folder "refrigerant_circuit".
 const SCHEME = [5136, 5139, 5146, 5200, 5612, 5615];
-const GROUPS = [{ id: 'kaeltekreis', name: 'Kältekreis', codes: SCHEME }];
-const MENU_USER = [3, 9]; // "Grundanzeige" + "Benutzer"
+const GROUPS = [{ id: 'refrigerant_circuit', name: P.FIXED_FOLDERS.refrigerant_circuit, codes: SCHEME }];
+const MENU_USER = [3, 9]; // basic display + user menu
 // registers holding secrets (service/expert passwords, session id, unlock code, SMT-ID) are never read or exposed
 const SECRET_TYPES = /^(password_t|eightbytehash_t)$/;
 const NEVER_WRITE = /IP_t|address|password|ssid|mac|eibpaddr|installation|country|language|devid|hash/i;
 const BATCH = 80;
 // actions that are safe to trigger from ioBroker (others like update/restart/reset only in write mode "all")
 const SAFE_ACTIONS = [5693, 2126];
+
+/**
+ * Id used up to version 0.5.x for an object (German folder names), or null if the id was not renamed
+ *
+ * @param id current object id (without namespace)
+ */
+function legacyIdOf(id) {
+    const [first, ...rest] = id.split('.');
+    const old = Object.keys(P.LEGACY_IDS).find(k => P.LEGACY_IDS[k] === first);
+    return old ? [old, ...rest].join('.') : null;
+}
 
 class Remko extends utils.Adapter {
     constructor(options = {}) {
@@ -75,7 +86,7 @@ class Remko extends utils.Adapter {
         // 2) register database from the web UI (cached for offline start)
         const metaId = `${this.namespace}.files`;
         try {
-            await this.setForeignObjectNotExistsAsync(metaId, {
+            await this.setObjectNotExistsAsync('files', {
                 type: 'meta',
                 common: { name: 'REMKO Cache', type: 'meta.user' },
                 native: {},
@@ -270,7 +281,12 @@ class Remko extends utils.Adapter {
      * @param obj object definition
      */
     async writeObject(id, obj) {
-        const old = await this.getObjectAsync(id);
+        let old = await this.getObjectAsync(id);
+        if (!old) {
+            // object was renamed (German ids up to 0.5.x) - take over the user settings of the old object
+            const legacyId = legacyIdOf(id);
+            old = legacyId ? await this.getObjectAsync(legacyId) : null;
+        }
         if (old && old.common && old.common.custom) {
             obj.common.custom = old.common.custom;
         }
@@ -372,7 +388,7 @@ class Remko extends utils.Adapter {
             return;
         }
         if (!this.writable.has(code)) {
-            this.log.warn(`${code} (${reg.name.en}) is not writable (write mode: ${this.config.writeMode})`);
+            this.log.warn(`${code} (${P.textOf(reg.name)}) is not writable (write mode: ${this.config.writeMode})`);
             return;
         }
         if (reg.typedef === 'action_t' && !state.val) {
@@ -380,7 +396,7 @@ class Remko extends utils.Adapter {
         }
         try {
             const hex = P.encode(reg, state.val);
-            this.log.info(`Writing ${code} ${reg.name.en} = ${state.val} (${hex})`);
+            this.log.info(`Writing ${code} ${P.textOf(reg.name)} = ${state.val} (${hex})`);
             this.query([...new Set([...this.fast, code])], { [code]: hex });
         } catch (e) {
             this.log.error(`Write ${code} rejected: ${e.message}`);

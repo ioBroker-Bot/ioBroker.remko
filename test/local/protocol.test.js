@@ -12,7 +12,7 @@ const dec = c => P.decode(R[c], values[c]);
 assert.strictEqual(dec(1082), 45);          // WW Soll-Temp 01C2
 assert.strictEqual(dec(1079), 1);           // Automatik Eco
 assert.strictEqual(R[1079].states['1'], 'Automatik Eco');
-assert.ok(dec(5032) > -30 && dec(5032) < 45); // Außentemperatur plausibel
+assert.ok(dec(5032) > -30 && dec(5032) < 45); // outside temperature plausible
 assert.ok(dec(5039) > 20 && dec(5039) < 70);  // WW Ist plausibel
 assert.strictEqual(dec(5359), 8.8);         // PV-Leistung kW
 assert.strictEqual(dec(5105), 8960);        // el. Energie kWh

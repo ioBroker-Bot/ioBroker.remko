@@ -58,9 +58,9 @@ main({});
     assert.strictEqual(objects['information.warmwasser'].type, 'channel');
     assert.ok(!Object.keys(objects).some(k => k.endsWith('.5019')), 'solar collector hidden');
     assert.ok(!objects['parameter.1082'], 'old 0.1 object removed');
-    assert.ok(objects['uebersicht.5693'], 'action kept');
+    assert.ok(objects['overview.5693'], 'action kept');
     assert.ok(!Object.keys(objects).some(k => /\.(5052|5182|5181|1935|1015)$/.test(k)), 'no secret registers');
-    assert.strictEqual(objects['uebersicht.5693'].common.write, true);
+    assert.strictEqual(objects['overview.5693'].common.write, true);
     const n = Object.keys(objects).length; console.log('Objekte:', n, 'beschreibbar:', Object.values(objects).filter(o => o.common.write).length);
     assert.ok(n > 300);
     // official ioBroker object structure check (same as in ioBroker.repositories PRs)
@@ -82,7 +82,7 @@ main({});
     a.emit('stateChange', 'remko.0.einstellungen.warmwasser.1082', { val: 48, ack: false });
     a.emit('stateChange', 'remko.0.einstellungen.warmwasser.1082', { val: 99, ack: false }); // out of range -> rejected
     a.emit('stateChange', 'remko.0.information.warmwasser.5039', { val: 10, ack: false });   // read-only -> rejected
-    a.emit('stateChange', 'remko.0.uebersicht.5693', { val: true, ack: false });
+    a.emit('stateChange', 'remko.0.overview.5693', { val: true, ack: false });
     await new Promise(r => setTimeout(r, 1500));
     assert.deepStrictEqual(writes, [{ 1082: '01E0' }, { 5693: '01' }]);
     assert.strictEqual(states['einstellungen.warmwasser.1082'].val, 48);

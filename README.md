@@ -57,11 +57,15 @@ The adapter evaluates the **display conditions of the web UI** (e.g. "solar only
 - `remko.0.information.<area>.<no>` – user → information (e.g. `information.warmwasser.5039`)
 - `remko.0.einstellungen.<area>.<no>` – user → settings (e.g. `einstellungen.warmwasser.1082`)
 - `remko.0.status.<no>` – status page
-- `remko.0.uebersicht…`, `remko.0.homescreen…` – basic display
-- `remko.0.kaeltekreis.<no>` – refrigerant circuit as shown in the "heat pump" scheme of the web UI (hot gas 5146, suction gas 5612, liquid 5139, evaporator/register 5200, expansion valve 5615, 4-way valve 5136); always read in the fast cycle, independent of the menu level
-- optional `service…`, `experte…`, `inbetriebnahme…`
+- `remko.0.uebersicht…`, `remko.0.homescreen…` – basic display (menus of the controller)
+- `remko.0.overview.<no>` – values that are always read but have no menu entry of their own
+- `remko.0.refrigerant_circuit.<no>` – refrigerant circuit as shown in the "heat pump" scheme of the web UI (hot gas 5146, suction gas 5612, liquid 5139, evaporator/register 5200, expansion valve 5615, 4-way valve 5136); always read in the fast cycle, independent of the menu level
+- optional `service…`, `expert…`, `commissioning…`
+- `remko.0.general.<no>` / `remko.0.additional.<no>` – values without menu / all other values (option "show all")
 
-The register number is always the last part of the id. Names, units, min/max and enumerations (`common.states`) come from the heat pump (German texts, as delivered by the controller).
+Folder ids defined by the adapter are English. Ids below them are derived from the menu names of the controller, which only delivers German menu names (e.g. `einstellungen`, `warmwasser`).
+
+The register number is always the last part of the id. Names, units, min/max and enumerations (`common.states`) come from the heat pump. Names and enumeration texts are translated where the controller delivers English texts; otherwise the text is shown exactly as received from the device.
 
 Important registers (WKF 100):
 
@@ -113,6 +117,13 @@ Protocol knowledge partly based on [Altrec/remko_mqtt-ha](https://github.com/Alt
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 0.6.0 (2026-10-22)
+- (mrdimixx) **Breaking:** folder ids defined by the adapter are now English: `kaeltekreis` → `refrigerant_circuit`, `uebersicht` (values without menu) → `overview`, `allgemein` → `general`, `weitere` → `additional`, `experte` → `expert`, `inbetriebnahme` → `commissioning`. Old objects are removed automatically, user settings (e.g. history) are taken over. Please adapt scripts and visualisations.
+- (mrdimixx) folder names and enumeration texts (`common.states`) are translated; English names never fall back to German texts
+- (mrdimixx) `tools/probe.js` output is English
+- (mrdimixx) cache meta object is created with `setObjectNotExistsAsync`
+- (mrdimixx) dependencies updated
+
 ### 0.5.1 (2026-10-08)
 - (mrdimixx) read-only values no longer get min/max (fixes warnings like `remko.0.status.5026 has value 1082 greater than max 999`)
 

@@ -2,9 +2,9 @@
 'use strict';
 /**
  * Stand-alone test: reads the REMKO heat pump without installing the adapter.
- *   node tools/probe.js <IP-der-Waermepumpe>            (WebSocket 9001, like the web UI)
- *   node tools/probe.js <IP-der-Waermepumpe> --tcp      (MQTT TCP 1883)
- *   node tools/probe.js <IP-der-Waermepumpe> --write 1082=46   (writes one register, then shows it)
+ *   node tools/probe.js <ip-of-heat-pump>              (WebSocket 9001, like the web UI)
+ *   node tools/probe.js <ip-of-heat-pump> --tcp        (MQTT TCP 1883)
+ *   node tools/probe.js <ip-of-heat-pump> --write 1082=46   (writes one register, then shows it)
  */
 const http = require('node:http');
 const mqtt = require('mqtt');
@@ -32,6 +32,9 @@ const SHOW = String(
     .split(',')
     .map(Number);
 
+// English name of a register (falls back to the German controller text if there is no English one)
+const name = r => (r.name.en && !/^Register \d+$/.test(r.name.en) ? r.name.en : r.name.de) || `Register ${r.code}`;
+
 const get = url =>
     new Promise((res, rej) =>
         http
@@ -50,13 +53,13 @@ const get = url =>
 (async () => {
     const creds = P.parseSmtJs(await get(`${httpBase}/js/smt.min.js`));
     console.log(
-        `Firmware ${creds.version}, Topic ${creds.topicPrefix}, Passwort ${creds.password ? `gefunden (${creds.password.length} Zeichen)` : 'NICHT gefunden'}`,
+        `Firmware ${creds.version}, topic ${creds.topicPrefix}, password ${creds.password ? `found (${creds.password.length} characters)` : 'NOT found'}`,
     );
     const db = P.buildRegisterDb(
         JSON.parse(await get(`${httpBase}/json/smt18.json`)),
         JSON.parse(await get(`${httpBase}/json/smtmain.json`)),
     );
-    console.log(`${Object.keys(db.regs).length} Register in der Datenbank`);
+    console.log(`${Object.keys(db.regs).length} registers in the database`);
 
     const url = tcp ? `mqtt://${host}:${port}` : `ws://${host}:${port}/mqtt`;
     const clientId = `SMT${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}I0000000000000000`;
@@ -70,15 +73,15 @@ const get = url =>
     });
     const got = {};
     const fail = setTimeout(() => {
-        console.error('Timeout – keine Antwort');
+        console.error('Timeout - no response');
         process.exit(2);
     }, 30000);
     c.on('error', e => {
-        console.error('MQTT-Fehler:', e.message);
+        console.error('MQTT error:', e.message);
         process.exit(2);
     });
     c.on('connect', () => {
-        console.log(`MQTT verbunden (${url})`);
+        console.log(`MQTT connected (${url})`);
         c.subscribe(`${creds.topicPrefix}/HOST2CLIENT`);
         const msg = { FORCE_RESPONSE: true, query_list: SHOW, CLIENT_ID: clientId };
         const w = opt('write');
@@ -88,7 +91,7 @@ const get = url =>
             if (!SHOW.includes(Number(code))) {
                 msg.query_list.push(Number(code));
             }
-            console.log(`SCHREIBE ${code} (${db.regs[code].name.de}) = ${val} -> ${msg.values[code]}`);
+            console.log(`WRITE ${code} (${name(db.regs[code])}) = ${val} -> ${msg.values[code]}`);
         }
         c.publish(`${creds.topicPrefix}/CLIENT2HOST`, JSON.stringify(msg), { qos: 2 });
     });
@@ -105,8 +108,9 @@ const get = url =>
             for (const n of SHOW) {
                 const r = db.regs[n];
                 const v = P.decode(r, got[n]);
-                const txt = r.states && r.states[v] !== undefined ? `${r.states[v]} (${v})` : `${v} ${r.unit || ''}`;
-                console.log(`${String(n).padEnd(5)} ${r.name.de.padEnd(28)} ${txt}`);
+                const txt =
+                    r.states && r.states[v] !== undefined ? `${P.textOf(r.states[v])} (${v})` : `${v} ${r.unit || ''}`;
+                console.log(`${String(n).padEnd(5)} ${name(r).padEnd(28)} ${txt}`);
             }
             c.end(true, () => process.exit(0));
         }

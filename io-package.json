@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "remko",
-        "version": "0.5.1",
+        "version": "0.6.0",
         "news": {
+            "0.6.0": {
+                "en": "Breaking: folder ids are now English (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); old objects are removed, history settings are taken over. Folder names and value texts are translated",
+                "de": "Breaking: Ordner-IDs sind jetzt englisch (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); alte Objekte werden entfernt, History-Einstellungen werden übernommen. Ordnernamen und Werttexte sind übersetzt",
+                "ru": "Критическое изменение: ID папок теперь на английском (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); старые объекты удаляются, настройки истории переносятся. Названия папок и тексты значений переведены",
+                "pt": "Alteração incompatível: os IDs das pastas agora estão em inglês (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); os objetos antigos são removidos, as configurações de histórico são mantidas. Nomes de pastas e textos de valores traduzidos",
+                "nl": "Brekende wijziging: map-ID's zijn nu Engels (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); oude objecten worden verwijderd, history-instellingen worden overgenomen. Mapnamen en waardeteksten zijn vertaald",
+                "fr": "Changement majeur : les ID de dossiers sont désormais en anglais (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional) ; les anciens objets sont supprimés, les paramètres d'historique sont repris. Noms de dossiers et textes des valeurs traduits",
+                "it": "Modifica incompatibile: gli ID delle cartelle ora sono in inglese (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); i vecchi oggetti vengono rimossi, le impostazioni della cronologia vengono mantenute. Nomi delle cartelle e testi dei valori tradotti",
+                "es": "Cambio importante: los ID de carpetas ahora están en inglés (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); los objetos antiguos se eliminan, la configuración del historial se conserva. Nombres de carpetas y textos de valores traducidos",
+                "pl": "Zmiana niekompatybilna: identyfikatory folderów są teraz angielskie (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); stare obiekty są usuwane, ustawienia historii są przejmowane. Nazwy folderów i teksty wartości przetłumaczone",
+                "uk": "Несумісна зміна: ID папок тепер англійською (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); старі об'єкти видаляються, налаштування історії переносяться. Назви папок і тексти значень перекладено",
+                "zh-cn": "重大变更：文件夹 ID 现为英文（kaeltekreis → refrigerant_circuit、experte → expert、inbetriebnahme → commissioning、uebersicht → overview、allgemein → general、weitere → additional）；旧对象会被删除，历史记录设置会被保留。文件夹名称和数值文本已翻译"
+            },
             "0.5.1": {
                 "en": "No more \"greater than max\" warnings for read-only values (min/max only for writable settings)",
                 "de": "Keine \"greater than max\"-Warnungen mehr bei reinen Anzeigewerten (min/max nur noch bei schreibbaren Einstellungen)",
@@ -80,19 +93,6 @@
                 "pl": "Publikacja przez GitHub Actions z npm provenance",
                 "uk": "Публікація через GitHub Actions з npm provenance",
                 "zh-cn": "通过 GitHub Actions 发布并带有 npm 来源证明"
-            },
-            "0.3.0": {
-                "en": "Prepared for the ioBroker repository: tests, translations, GitHub Actions",
-                "de": "Für das ioBroker-Repository vorbereitet: Tests, Übersetzungen, GitHub Actions",
-                "ru": "Подготовлено для репозитория ioBroker: тесты, переводы, GitHub Actions",
-                "pt": "Preparado para o repositório ioBroker: testes, traduções, GitHub Actions",
-                "nl": "Voorbereid voor de ioBroker-repository: tests, vertalingen, GitHub Actions",
-                "fr": "Préparé pour le dépôt ioBroker : tests, traductions, GitHub Actions",
-                "it": "Preparato per il repository ioBroker: test, traduzioni, GitHub Actions",
-                "es": "Preparado para el repositorio de ioBroker: pruebas, traducciones, GitHub Actions",
-                "pl": "Przygotowano do repozytorium ioBroker: testy, tłumaczenia, GitHub Actions",
-                "uk": "Підготовлено для репозиторію ioBroker: тести, переклади, GitHub Actions",
-                "zh-cn": "为 ioBroker 仓库做准备：测试、翻译、GitHub Actions"
             }
         },
         "titleLang": {

@@ -5,7 +5,7 @@ try {
     d = require('./fixtures/remko-wkf100-register.json');
 } catch {
     // The fixture is a capture of a real heat pump and is not part of the public repository.
-    console.log('SKIP: test/fixtures/remko-wkf100-register.json fehlt (Mitschnitt einer echten Anlage, nicht im Repository)');
+    console.log('SKIP: test/fixtures/remko-wkf100-register.json missing (capture of a real installation, not part of the repository)');
     process.exit(0);
 }
 const F = d.fields;
