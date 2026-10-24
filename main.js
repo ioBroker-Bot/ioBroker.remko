@@ -21,17 +21,6 @@ const BATCH = 80;
 // actions that are safe to trigger from ioBroker (others like update/restart/reset only in write mode "all")
 const SAFE_ACTIONS = [5693, 2126];
 
-/**
- * Id used up to version 0.5.x for an object (German folder names), or null if the id was not renamed
- *
- * @param id current object id (without namespace)
- */
-function legacyIdOf(id) {
-    const [first, ...rest] = id.split('.');
-    const old = Object.keys(P.LEGACY_IDS).find(k => P.LEGACY_IDS[k] === first);
-    return old ? [old, ...rest].join('.') : null;
-}
-
 class Remko extends utils.Adapter {
     constructor(options = {}) {
         super({ ...options, name: 'remko' });
@@ -55,7 +44,7 @@ class Remko extends utils.Adapter {
             this.log.error('No IP address of the heat pump configured');
             return;
         }
-        const base = `http://${c.host}${c.httpPort ? `:${c.httpPort}` : ''}`;
+        const base = `http://${c.host}`;
 
         // 1) credentials + topic from the web UI
         let creds = {
@@ -189,8 +178,10 @@ class Remko extends utils.Adapter {
 
     startPolling() {
         this.clearTimers();
-        const keepAliveMs = Math.max(10, Number(this.config.keepAlive) || 30) * 1000;
-        const fullMs = Math.max(1, Number(this.config.fullRefresh) || 15) * 60000;
+        // setInterval overflows above 2^31-1 ms
+        const MAX_TIMER = 2_147_483_647;
+        const keepAliveMs = Math.min(Math.max(10, Number(this.config.keepAlive) || 30) * 1000, MAX_TIMER);
+        const fullMs = Math.min(Math.max(1, Number(this.config.fullRefresh) || 15) * 60000, MAX_TIMER);
         this.fullRefresh();
         this.timers.keepAlive = this.setInterval(() => this.query(this.fast), keepAliveMs);
         this.timers.full = this.setInterval(() => this.fullRefresh(), fullMs);
@@ -279,13 +270,13 @@ class Remko extends utils.Adapter {
      *
      * @param id object id (without namespace)
      * @param obj object definition
+     * @param [previous] object of the same register under its old id (user settings are taken over)
      */
-    async writeObject(id, obj) {
+    async writeObject(id, obj, previous) {
         let old = await this.getObjectAsync(id);
-        if (!old) {
-            // object was renamed (German ids up to 0.5.x) - take over the user settings of the old object
-            const legacyId = legacyIdOf(id);
-            old = legacyId ? await this.getObjectAsync(legacyId) : null;
+        if (!old && previous) {
+            // the object was renamed (e.g. new folder names) - take over the user settings of the old object
+            old = previous;
         }
         if (old && old.common && old.common.custom) {
             obj.common.custom = old.common.custom;
@@ -324,6 +315,15 @@ class Remko extends utils.Adapter {
                 native: { code, typedef: reg.typedef, userMenu: this.userRegs.has(code) },
             });
         }
+        // existing state objects by register code (to take over user settings when an id changes)
+        const ns = `${this.namespace}.`;
+        const existing = await this.getAdapterObjectsAsync();
+        const previousByCode = new Map();
+        for (const obj of Object.values(existing)) {
+            if (obj && obj.type === 'state' && obj.native && obj.native.code !== undefined) {
+                previousByCode.set(Number(obj.native.code), obj);
+            }
+        }
         const newCodeToId = new Map();
         for (const [id, obj] of wanted) {
             if (obj.type === 'state') {
@@ -336,15 +336,13 @@ class Remko extends utils.Adapter {
                     ? this.codeToId.get(obj.native.code) === id
                     : !!(this.knownFolders && this.knownFolders.has(id));
             if (!known) {
-                await this.writeObject(id, obj);
+                await this.writeObject(id, obj, obj.type === 'state' ? previousByCode.get(obj.native.code) : undefined);
             }
         }
         this.knownFolders = new Set([...wanted.keys()].filter(id => wanted.get(id).type !== 'state'));
         this.codeToId = newCodeToId;
         this.idToCode = new Map([...newCodeToId].map(([k, v]) => [v, k]));
-        // remove objects that are no longer shown (incl. the flat 0.1.x layout)
-        const existing = await this.getAdapterObjectsAsync();
-        const ns = `${this.namespace}.`;
+        // remove objects that are no longer shown (incl. objects with old ids)
         let removed = 0;
         for (const fullId of Object.keys(existing)) {
             const id = fullId.startsWith(ns) ? fullId.slice(ns.length) : fullId;

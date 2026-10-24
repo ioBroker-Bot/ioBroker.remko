@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "remko",
-        "version": "0.6.0",
+        "version": "0.6.1",
         "news": {
+            "0.6.1": {
+                "en": "Breaking: folder ids are now derived from the English menu texts of the controller (e.g. einstellungen.warmwasser → settings.domestic_hot_water); old objects are removed, history settings are taken over by register number. Intervals limited, energy roles corrected",
+                "de": "Breaking: Ordner-IDs werden jetzt aus den englischen Menütexten der Steuerung gebildet (z. B. einstellungen.warmwasser → settings.domestic_hot_water); alte Objekte werden entfernt, History-Einstellungen werden über die Registernummer übernommen. Intervalle begrenzt, Energie-Rollen korrigiert",
+                "ru": "Критическое изменение: ID папок теперь формируются из английских текстов меню контроллера (например, einstellungen.warmwasser → settings.domestic_hot_water); старые объекты удаляются, настройки истории переносятся по номеру регистра. Интервалы ограничены, роли энергии исправлены",
+                "pt": "Alteração incompatível: os IDs das pastas agora derivam dos textos de menu em inglês do controlador (ex.: einstellungen.warmwasser → settings.domestic_hot_water); os objetos antigos são removidos, as configurações de histórico são mantidas pelo número do registo. Intervalos limitados, funções de energia corrigidas",
+                "nl": "Brekende wijziging: map-ID's worden nu afgeleid van de Engelse menuteksten van de regelaar (bijv. einstellungen.warmwasser → settings.domestic_hot_water); oude objecten worden verwijderd, history-instellingen worden via het registernummer overgenomen. Intervallen begrensd, energierollen gecorrigeerd",
+                "fr": "Changement majeur : les ID de dossiers sont désormais dérivés des textes de menu anglais du contrôleur (ex. einstellungen.warmwasser → settings.domestic_hot_water) ; les anciens objets sont supprimés, les paramètres d'historique sont repris via le numéro de registre. Intervalles limités, rôles d'énergie corrigés",
+                "it": "Modifica incompatibile: gli ID delle cartelle ora derivano dai testi dei menu in inglese del controller (es. einstellungen.warmwasser → settings.domestic_hot_water); i vecchi oggetti vengono rimossi, le impostazioni della cronologia vengono mantenute tramite il numero di registro. Intervalli limitati, ruoli energia corretti",
+                "es": "Cambio importante: los ID de carpetas ahora se derivan de los textos de menú en inglés del controlador (p. ej. einstellungen.warmwasser → settings.domestic_hot_water); los objetos antiguos se eliminan, la configuración del historial se conserva mediante el número de registro. Intervalos limitados, roles de energía corregidos",
+                "pl": "Zmiana niekompatybilna: identyfikatory folderów są teraz tworzone z angielskich tekstów menu sterownika (np. einstellungen.warmwasser → settings.domestic_hot_water); stare obiekty są usuwane, ustawienia historii są przejmowane według numeru rejestru. Interwały ograniczone, role energii poprawione",
+                "uk": "Несумісна зміна: ID папок тепер формуються з англійських текстів меню контролера (наприклад, einstellungen.warmwasser → settings.domestic_hot_water); старі об'єкти видаляються, налаштування історії переносяться за номером регістра. Інтервали обмежено, ролі енергії виправлено",
+                "zh-cn": "重大变更：文件夹 ID 现在根据控制器的英文菜单文本生成（例如 einstellungen.warmwasser → settings.domestic_hot_water）；旧对象会被删除，历史记录设置按寄存器编号保留。已限制时间间隔，修正能量角色"
+            },
             "0.6.0": {
                 "en": "Breaking: folder ids are now English (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); old objects are removed, history settings are taken over. Folder names and value texts are translated",
                 "de": "Breaking: Ordner-IDs sind jetzt englisch (kaeltekreis → refrigerant_circuit, experte → expert, inbetriebnahme → commissioning, uebersicht → overview, allgemein → general, weitere → additional); alte Objekte werden entfernt, History-Einstellungen werden übernommen. Ordnernamen und Werttexte sind übersetzt",
@@ -80,19 +93,6 @@
                 "pl": "Dodano link do darowizn PayPal",
                 "uk": "Додано посилання для пожертв через PayPal",
                 "zh-cn": "已添加 PayPal 捐赠链接"
-            },
-            "0.3.1": {
-                "en": "Release via GitHub Actions with npm provenance",
-                "de": "Veröffentlichung über GitHub Actions mit npm-Provenance",
-                "ru": "Публикация через GitHub Actions с npm provenance",
-                "pt": "Publicação via GitHub Actions com npm provenance",
-                "nl": "Publicatie via GitHub Actions met npm-provenance",
-                "fr": "Publication via GitHub Actions avec provenance npm",
-                "it": "Pubblicazione tramite GitHub Actions con provenance npm",
-                "es": "Publicación mediante GitHub Actions con provenance de npm",
-                "pl": "Publikacja przez GitHub Actions z npm provenance",
-                "uk": "Публікація через GitHub Actions з npm provenance",
-                "zh-cn": "通过 GitHub Actions 发布并带有 npm 来源证明"
             }
         },
         "titleLang": {

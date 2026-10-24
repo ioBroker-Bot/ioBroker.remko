@@ -54,16 +54,15 @@ Protocol:
 
 The adapter evaluates the **display conditions of the web UI** (e.g. "solar only if a solar system is enabled"), so only data points that exist on your installation are created. The structure follows the menu of the controller:
 
-- `remko.0.information.<area>.<no>` – user → information (e.g. `information.warmwasser.5039`)
-- `remko.0.einstellungen.<area>.<no>` – user → settings (e.g. `einstellungen.warmwasser.1082`)
+- `remko.0.information.<area>.<no>` – user → information (e.g. `information.domestic_hot_water.5039`)
+- `remko.0.settings.<area>.<no>` – user → settings (e.g. `settings.domestic_hot_water.1082`)
 - `remko.0.status.<no>` – status page
-- `remko.0.uebersicht…`, `remko.0.homescreen…` – basic display (menus of the controller)
-- `remko.0.overview.<no>` – values that are always read but have no menu entry of their own
+- `remko.0.overview…`, `remko.0.homescreen…` – basic display, plus values that are always read but have no menu entry of their own
 - `remko.0.refrigerant_circuit.<no>` – refrigerant circuit as shown in the "heat pump" scheme of the web UI (hot gas 5146, suction gas 5612, liquid 5139, evaporator/register 5200, expansion valve 5615, 4-way valve 5136); always read in the fast cycle, independent of the menu level
 - optional `service…`, `expert…`, `commissioning…`
 - `remko.0.general.<no>` / `remko.0.additional.<no>` – values without menu / all other values (option "show all")
 
-Folder ids defined by the adapter are English. Ids below them are derived from the menu names of the controller, which only delivers German menu names (e.g. `einstellungen`, `warmwasser`).
+Folder ids are English: they are derived from the English menu texts of the controller (e.g. `settings`, `domestic_hot_water`, `meter_readings`). Only if the controller has no English text for a menu, the German text is used.
 
 The register number is always the last part of the id. Names, units, min/max and enumerations (`common.states`) come from the heat pump. Names and enumeration texts are translated where the controller delivers English texts; otherwise the text is shown exactly as received from the device.
 
@@ -117,6 +116,13 @@ Protocol knowledge partly based on [Altrec/remko_mqtt-ha](https://github.com/Alt
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 0.6.1 (2026-10-24)
+- (mrdimixx) **Breaking:** folder ids below the menu of the controller are now derived from its English menu texts (e.g. `einstellungen.warmwasser` → `settings.domestic_hot_water`, `information.zaehlerstaende` → `information.meter_readings`, `uebersicht` → `overview`). Old objects are removed automatically; user settings (e.g. history, SourceAnalytix) are taken over by register number. Please adapt scripts and visualisations.
+- (mrdimixx) folder names are always translation objects (German controller text as fallback if there is no English text)
+- (mrdimixx) timer intervals are limited to the maximum supported by Node.js
+- (mrdimixx) writable energy registers get role `level`
+- (mrdimixx) unused setting `httpPort` removed
+
 ### 0.6.0 (2026-10-22)
 - (mrdimixx) **Breaking:** folder ids defined by the adapter are now English: `kaeltekreis` → `refrigerant_circuit`, `uebersicht` (values without menu) → `overview`, `allgemein` → `general`, `weitere` → `additional`, `experte` → `expert`, `inbetriebnahme` → `commissioning`. Old objects are removed automatically, user settings (e.g. history) are taken over. Please adapt scripts and visualisations.
 - (mrdimixx) folder names and enumeration texts (`common.states`) are translated; English names never fall back to German texts

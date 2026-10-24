@@ -14,8 +14,8 @@ class FakeAdapter extends EventEmitter {
     async extendObjectAsync(id, o) { objects[id] = o; }
     async getObjectAsync(id) { return objects[id] || null; }
     async setObjectAsync(id, o) { objects[id] = JSON.parse(JSON.stringify(o)); }
-    async setForeignObjectNotExistsAsync(id, o) { if (!objects[id]) objects[id] = o; }
-    async writeFileAsync(ns, f, d) { if (!objects[ns] || objects[ns].type !== 'meta') throw new Error(`${ns} is not an object of type "meta"`); files[f] = d; }
+    async setObjectNotExistsAsync(id, o) { if (!objects[id]) objects[id] = o; }
+    async writeFileAsync(ns, f, d) { const o = objects[ns.replace(/^remko\.0\./, '')]; if (!o || o.type !== 'meta') throw new Error(`${ns} is not an object of type "meta"`); files[f] = d; }
     async readFileAsync(ns, f) { return { file: Buffer.from(files[f]) }; }
     subscribeStates() {}
     async getAdapterObjectsAsync() { return Object.fromEntries(Object.entries(objects).map(([k, v]) => [`${this.namespace}.${k}`, v])); }
@@ -39,12 +39,14 @@ aedes.on('publish', (pk, cl) => { if (!cl || !pk.topic.endsWith('/CLIENT2HOST'))
 const broker = net.createServer(aedes.handle).listen(18831);
 const web = http.createServer((q, r) => { const b = { '/js/smt.min.js': `global.SMT_VERSION='4.28';global.MQTT_USERNAME="0000000000000000",global.MQTT_PASSWORD="${PW}"`,
     '/json/smt18.json': JSON.stringify(smt18), '/json/smtmain.json': JSON.stringify(smtmain) }[q.url]; r.writeHead(b ? 200 : 404); r.end(b || ''); }).listen(18081);
-FakeAdapter.config.httpPort = 18081;
 objects['parameter.1082'] = { type: 'state', common: {}, native: {} };
 objects['parameter'] = { type: 'folder', common: {}, native: {} };
 const main = require('../../main.js');
 // mqtt must go to 127.0.0.1 -> override connect url host
-main({});
+const inst = main({});
+// the web UI of the mock runs on port 18081 instead of 80
+const origGet = inst.httpGet.bind(inst);
+inst.httpGet = url => origGet(url.replace('http://127.0.0.1/', 'http://127.0.0.1:18081/'));
 
 (async () => {
     await new Promise(r => setTimeout(r, 38000)); // full refresh: ~27 batches * 1.5 s
@@ -54,7 +56,7 @@ main({});
     assert.strictEqual(states['einstellungen.warmwasser.1082'].val, 45);
     assert.strictEqual(objects['einstellungen.warmwasser.1082'].common.write, true);
     assert.strictEqual(objects['information.warmwasser.5039'].common.write, false);
-    assert.strictEqual(objects['einstellungen.warmwasser.1079'].common.states['2'], 'nur Solar / PV');
+    assert.strictEqual(objects['einstellungen.warmwasser.1079'].common.states['2'].de, 'nur Solar / PV');
     assert.strictEqual(objects['information.warmwasser'].type, 'channel');
     assert.ok(!Object.keys(objects).some(k => k.endsWith('.5019')), 'solar collector hidden');
     assert.ok(!objects['parameter.1082'], 'old 0.1 object removed');
