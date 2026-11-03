@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "remko",
-        "version": "0.6.1",
+        "version": "0.6.2",
         "news": {
+            "0.6.2": {
+                "en": "Objects are no longer deleted while running (hidden values keep their object and history settings); errors in MQTT message processing no longer restart the adapter",
+                "de": "Objekte werden im laufenden Betrieb nicht mehr gelöscht (ausgeblendete Werte behalten Objekt und History-Einstellungen); Fehler bei der Verarbeitung von MQTT-Nachrichten starten den Adapter nicht mehr neu",
+                "ru": "Объекты больше не удаляются во время работы (скрытые значения сохраняют объект и настройки истории); ошибки при обработке MQTT-сообщений больше не перезапускают адаптер",
+                "pt": "Os objetos já não são eliminados durante o funcionamento (valores ocultos mantêm o objeto e as configurações de histórico); erros no processamento de mensagens MQTT já não reiniciam o adaptador",
+                "nl": "Objecten worden tijdens het draaien niet meer verwijderd (verborgen waarden behouden hun object en history-instellingen); fouten bij het verwerken van MQTT-berichten herstarten de adapter niet meer",
+                "fr": "Les objets ne sont plus supprimés pendant le fonctionnement (les valeurs masquées conservent leur objet et leurs paramètres d'historique) ; les erreurs de traitement des messages MQTT ne redémarrent plus l'adaptateur",
+                "it": "Gli oggetti non vengono più eliminati durante il funzionamento (i valori nascosti mantengono l'oggetto e le impostazioni della cronologia); gli errori nell'elaborazione dei messaggi MQTT non riavviano più l'adattatore",
+                "es": "Los objetos ya no se eliminan durante el funcionamiento (los valores ocultos conservan su objeto y la configuración del historial); los errores al procesar mensajes MQTT ya no reinician el adaptador",
+                "pl": "Obiekty nie są już usuwane podczas pracy (ukryte wartości zachowują obiekt i ustawienia historii); błędy przetwarzania wiadomości MQTT nie restartują już adaptera",
+                "uk": "Об'єкти більше не видаляються під час роботи (приховані значення зберігають об'єкт і налаштування історії); помилки обробки MQTT-повідомлень більше не перезапускають адаптер",
+                "zh-cn": "运行期间不再删除对象（隐藏的数值保留其对象和历史记录设置）；处理 MQTT 消息时出错不再导致适配器重启"
+            },
             "0.6.1": {
                 "en": "Breaking: folder ids are now derived from the English menu texts of the controller (e.g. einstellungen.warmwasser → settings.domestic_hot_water); old objects are removed, history settings are taken over by register number. Intervals limited, energy roles corrected",
                 "de": "Breaking: Ordner-IDs werden jetzt aus den englischen Menütexten der Steuerung gebildet (z. B. einstellungen.warmwasser → settings.domestic_hot_water); alte Objekte werden entfernt, History-Einstellungen werden über die Registernummer übernommen. Intervalle begrenzt, Energie-Rollen korrigiert",
@@ -80,19 +93,6 @@
                 "pl": "Rejestry z sekretami (hasła, ID sesji, SMT-ID) nie są już odczytywane ani tworzone",
                 "uk": "Регістри з секретами (паролі, ID сесії, SMT-ID) більше не читаються і не створюються",
                 "zh-cn": "不再读取或创建包含机密信息的寄存器（密码、会话 ID、SMT-ID）"
-            },
-            "0.3.2": {
-                "en": "PayPal donation link added",
-                "de": "PayPal-Spendenlink hinzugefügt",
-                "ru": "Добавлена ссылка для пожертвований через PayPal",
-                "pt": "Link de doação PayPal adicionado",
-                "nl": "PayPal-donatielink toegevoegd",
-                "fr": "Lien de don PayPal ajouté",
-                "it": "Aggiunto link per donazioni PayPal",
-                "es": "Enlace de donación de PayPal añadido",
-                "pl": "Dodano link do darowizn PayPal",
-                "uk": "Додано посилання для пожертв через PayPal",
-                "zh-cn": "已添加 PayPal 捐赠链接"
             }
         },
         "titleLang": {

@@ -171,7 +171,9 @@ class Remko extends utils.Adapter {
             this.client.subscribe(this.topicRx, { qos: 0 });
             this.startPolling();
         });
-        this.client.on('message', (topic, payload) => this.onMessage(payload));
+        this.client.on('message', (topic, payload) =>
+            this.onMessage(payload).catch(e => this.log.error(`Cannot process message: ${e.message}`)),
+        );
         this.client.on('close', () => this.setState('info.connection', false, true));
         this.client.on('error', e => this.log.warn(`MQTT: ${e.message}`));
     }
@@ -284,12 +286,14 @@ class Remko extends utils.Adapter {
         await this.setObjectAsync(id, obj);
     }
 
-    /** Decide (like the web UI) which registers are shown, create/remove objects accordingly */
-    async applyLayout() {
-        const c = this.config;
-        const tops = c.menuLevel === 'service' ? [9, 405, 3, 10, 11, 4] : [9, 405, 3];
-        const layout = P.layout(this.db, this.raw, { tops, all: !!c.showAll, always: this.fast, groups: GROUPS });
-        const wanted = new Map(); // id -> object
+    /**
+     * Build the objects (folders/channels + states) for a layout result
+     *
+     * @param layout result of P.layout()
+     * @returns {Map<string, ioBroker.SettableObject>} id -> object
+     */
+    objectsFor(layout) {
+        const out = new Map();
         for (const [code, { path }] of layout) {
             if (!this.allSet.has(code)) {
                 continue;
@@ -301,63 +305,149 @@ class Remko extends utils.Adapter {
             let prefix = '';
             for (const seg of path) {
                 prefix = prefix ? `${prefix}.${seg.id}` : seg.id;
-                if (!wanted.has(prefix)) {
-                    wanted.set(prefix, {
+                if (!out.has(prefix)) {
+                    out.set(prefix, {
                         type: prefix.includes('.') ? 'channel' : 'folder',
                         common: { name: seg.name },
                         native: {},
                     });
                 }
             }
-            wanted.set(`${prefix}.${code}`, {
+            out.set(`${prefix}.${code}`, {
                 type: 'state',
                 common: P.commonFor(reg, this.writable.has(code)),
                 native: { code, typedef: reg.typedef, userMenu: this.userRegs.has(code) },
             });
         }
-        // existing state objects by register code (to take over user settings when an id changes)
+        return out;
+    }
+
+    /**
+     * Decide (like the web UI) which registers are shown and create the missing objects.
+     *
+     * Objects are never deleted while the adapter is running: a display condition can turn false
+     * temporarily (register did not answer yet, operating mode changed ...) and deleting would
+     * lose user settings like history and break scripts/visualisations.
+     * Only on the first run after the start, really obsolete objects are removed: objects of
+     * registers that moved to a new id (e.g. renamed folders), registers that cannot appear at all
+     * with the current settings (menu level, unknown/excluded registers) and empty folders.
+     */
+    async applyLayout() {
+        const c = this.config;
+        const tops = c.menuLevel === 'service' ? [9, 405, 3, 10, 11, 4] : [9, 405, 3];
+        const opts = { tops, all: !!c.showAll, always: this.fast, groups: GROUPS };
+        const wanted = this.objectsFor(P.layout(this.db, this.raw, opts)); // currently visible
+        const startup = !this.layoutDone;
+
         const ns = `${this.namespace}.`;
-        const existing = await this.getAdapterObjectsAsync();
-        const previousByCode = new Map();
-        for (const obj of Object.values(existing)) {
-            if (obj && obj.type === 'state' && obj.native && obj.native.code !== undefined) {
-                previousByCode.set(Number(obj.native.code), obj);
+        const existing = {};
+        for (const [fullId, obj] of Object.entries(await this.getAdapterObjectsAsync())) {
+            existing[fullId.startsWith(ns) ? fullId.slice(ns.length) : fullId] = obj;
+        }
+        const isOwn = id => id === 'info' || id.startsWith('info.') || id === 'files';
+        // existing state objects by register code
+        const existingByCode = new Map();
+        for (const [id, obj] of Object.entries(existing)) {
+            if (!isOwn(id) && obj && obj.type === 'state' && obj.native && obj.native.code !== undefined) {
+                existingByCode.set(Number(obj.native.code), id);
             }
         }
-        const newCodeToId = new Map();
-        for (const [id, obj] of wanted) {
-            if (obj.type === 'state') {
-                newCodeToId.set(obj.native.code, id);
+
+        // structure independent of the current display conditions (only needed on start)
+        const structuralId = new Map();
+        let structure = new Map();
+        if (startup) {
+            structure = this.objectsFor(P.layout(this.db, this.raw, { ...opts, ignoreConditions: true }));
+            for (const [id, obj] of structure) {
+                if (obj.type === 'state') {
+                    structuralId.set(obj.native.code, id);
+                }
             }
         }
-        for (const [id, obj] of wanted) {
-            const known =
-                obj.type === 'state'
-                    ? this.codeToId.get(obj.native.code) === id
-                    : !!(this.knownFolders && this.knownFolders.has(id));
-            if (!known) {
-                await this.writeObject(id, obj, obj.type === 'state' ? previousByCode.get(obj.native.code) : undefined);
-            }
-        }
-        this.knownFolders = new Set([...wanted.keys()].filter(id => wanted.get(id).type !== 'state'));
-        this.codeToId = newCodeToId;
-        this.idToCode = new Map([...newCodeToId].map(([k, v]) => [v, k]));
-        // remove objects that are no longer shown (incl. objects with old ids)
-        let removed = 0;
-        for (const fullId of Object.keys(existing)) {
-            const id = fullId.startsWith(ns) ? fullId.slice(ns.length) : fullId;
-            if (
-                id === 'info' ||
-                id.startsWith('info.') ||
-                id === 'files' ||
-                existing[fullId].type === 'meta' ||
-                wanted.has(id)
-            ) {
+
+        const codeToId = new Map();
+        const obsolete = new Set();
+        // keep existing objects
+        for (const [code, id] of existingByCode) {
+            const visibleId = [...wanted].find(([, o]) => o.type === 'state' && o.native.code === code)?.[0];
+            if (!startup) {
+                codeToId.set(code, id); // never move or delete at runtime
                 continue;
             }
-            await this.delObjectAsync(id);
-            removed++;
+            const possible = this.allSet.has(code) && structuralId.has(code);
+            const validId = id === visibleId || id === structuralId.get(code);
+            if (possible && validId) {
+                codeToId.set(code, id);
+                // refresh name/role/states once per start (e.g. after an adapter update), user settings are kept
+                const def = wanted.get(id) || structure.get(id);
+                if (def) {
+                    await this.writeObject(id, def);
+                }
+            } else {
+                obsolete.add(id); // renamed or cannot appear with the current settings
+            }
         }
+        // create missing objects for visible registers
+        let created = 0;
+        for (const [id, obj] of wanted) {
+            if (obj.type !== 'state') {
+                continue;
+            }
+            const code = obj.native.code;
+            if (codeToId.has(code)) {
+                continue; // already exists (possibly at another valid id)
+            }
+            const previousId = existingByCode.get(code);
+            const prefix = id.split('.').slice(0, -1);
+            for (let i = 1; i <= prefix.length; i++) {
+                const fid = prefix.slice(0, i).join('.');
+                if (!existing[fid] && !(this.knownFolders && this.knownFolders.has(fid))) {
+                    await this.writeObject(fid, wanted.get(fid));
+                    existing[fid] = wanted.get(fid);
+                }
+            }
+            await this.writeObject(id, obj, previousId ? existing[previousId] : undefined);
+            existing[id] = obj;
+            codeToId.set(code, id);
+            created++;
+        }
+        // update names/roles of folders that are visible again (e.g. translated names) only once at start
+        if (startup) {
+            for (const [id, obj] of wanted) {
+                if (obj.type !== 'state' && existing[id] && existing[id].type !== 'meta') {
+                    await this.writeObject(id, obj);
+                }
+            }
+        }
+        this.knownFolders = new Set(Object.keys(existing).filter(id => existing[id] && existing[id].type !== 'state'));
+        this.codeToId = codeToId;
+        this.idToCode = new Map([...codeToId].map(([k, v]) => [v, k]));
+
+        let removed = 0;
+        if (startup) {
+            const keptStates = new Set(codeToId.values());
+            for (const [id, obj] of Object.entries(existing)) {
+                if (isOwn(id) || !obj || obj.type === 'meta') {
+                    continue;
+                }
+                let remove = obsolete.has(id);
+                if (obj.type === 'state' && (!obj.native || obj.native.code === undefined)) {
+                    remove = !keptStates.has(id); // state without register (very old layout)
+                }
+                if (obj.type !== 'state') {
+                    // folders/channels: only if nothing is left below
+                    remove = ![...keptStates].some(s => s.startsWith(`${id}.`));
+                }
+                if (remove) {
+                    await this.delObjectAsync(id);
+                    removed++;
+                }
+            }
+            this.knownFolders = new Set(
+                [...this.knownFolders].filter(id => [...keptStates].some(s => s.startsWith(`${id}.`))),
+            );
+        }
+
         for (const [code, id] of this.codeToId) {
             const hex = this.hex[code];
             if (hex === undefined) {
@@ -368,9 +458,11 @@ class Remko extends utils.Adapter {
                 await this.setStateChangedAsync(id, { val, ack: true });
             }
         }
-        if (!this.layoutDone || removed) {
+        if (startup || removed || created) {
             this.log.info(
-                `${this.codeToId.size} data points active${removed ? `, ${removed} obsolete objects removed` : ''}`,
+                `${this.codeToId.size} data points active${created ? `, ${created} new` : ''}${
+                    removed ? `, ${removed} obsolete objects removed` : ''
+                }`,
             );
         }
         this.layoutDone = true;

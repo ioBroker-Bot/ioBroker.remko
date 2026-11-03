@@ -116,6 +116,10 @@ Protocol knowledge partly based on [Altrec/remko_mqtt-ha](https://github.com/Alt
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 0.6.2 (2026-11-03)
+- (mrdimixx) objects are no longer deleted while the adapter is running: values that are currently hidden by a display condition (e.g. register did not answer yet, operating mode changed) keep their object and user settings and are still updated. Only on start, really obsolete objects are removed (renamed ids, registers that cannot appear with the current settings, empty folders)
+- (mrdimixx) errors while processing MQTT messages are logged instead of restarting the adapter
+
 ### 0.6.1 (2026-10-24)
 - (mrdimixx) **Breaking:** folder ids below the menu of the controller are now derived from its English menu texts (e.g. `einstellungen.warmwasser` → `settings.domestic_hot_water`, `information.zaehlerstaende` → `information.meter_readings`, `uebersicht` → `overview`). Old objects are removed automatically; user settings (e.g. history, SourceAnalytix) are taken over by register number. Please adapt scripts and visualisations.
 - (mrdimixx) folder names are always translation objects (German controller text as fallback if there is no English text)
